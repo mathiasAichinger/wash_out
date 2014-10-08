@@ -193,9 +193,10 @@ module WashOut
     end
 
     def xml_data
-      xml_data = env['wash_out.soap_data'].values_at(:envelope, :Envelope).compact.first
-      xml_data = xml_data.values_at(:body, :Body).compact.first
+      envelope = env['wash_out.soap_data'].values_at(:envelope, :Envelope).compact.first
+      xml_data = envelope.values_at(:body, :Body).compact.first
       xml_data = xml_data.values_at(soap_action.underscore.to_sym, soap_action.to_sym).compact.first || {}
+      xml_data = xml_data.merge(envelope.values_at(:header, :Header).compact.first || {})
     end
 
   end
