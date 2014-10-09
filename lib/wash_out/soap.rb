@@ -31,6 +31,7 @@ module WashOut
         self.soap_actions[action] = options.merge(
           :in           => WashOut::Param.parse_def(soap_config, options[:args]),
           :out          => WashOut::Param.parse_def(soap_config, options[:return]),
+          :header       => WashOut::Param.parse_def(soap_config, options[:header]),
           :to           => options[:to] || action,
           :response_tag => options[:response_tag] || default_response_tag
         )

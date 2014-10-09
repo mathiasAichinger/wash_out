@@ -16,21 +16,21 @@ module WashOutHelper
 
       if !param.struct?
         if !param.multiplied
-          xml.tag! tag_name, param.value, param_options
+          xml.tag! "tns:#{tag_name}", param.value, param_options
         else
           param.value = [] unless param.value.is_a?(Array)
           param.value.each do |v|
-            xml.tag! tag_name, v, param_options
+            xml.tag! "tns:#{tag_name}", v, param_options
           end
         end
       else
         if !param.multiplied
-          xml.tag! tag_name,  param_options do
+          xml.tag! "tns:#{tag_name}",  param_options do
             wsdl_data(xml, param.map)
           end
         else
           param.map.each do |p|
-            xml.tag! tag_name, param_options do
+            xml.tag! "tns:#{tag_name}", param_options do
               wsdl_data(xml, p.map)
             end
           end
