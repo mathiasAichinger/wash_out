@@ -82,6 +82,10 @@ module WashOut
       result = { 'value' => result } unless result.is_a? Hash
       result = HashWithIndifferentAccess.new(result)
 
+      header = options[:header]
+      header = { 'value' => header } unless header.is_a? Hash
+      header = HashWithIndifferentAccess.new(header)
+
       inject = lambda {|data, map|
         result_spec = []
         return result_spec if data.nil?
@@ -126,7 +130,7 @@ module WashOut
 
       render :template => "wash_with_soap/#{soap_config.wsdl_style}/response",
              :layout => false,
-             :locals => {:header => inject.call((options[:header]).with_indifferent_access, @action_spec[:header]), :result => inject.call(result, @action_spec[:out]) },
+             :locals => {:header => inject.call(header, @action_spec[:header]), :result => inject.call(result, @action_spec[:out]) },
              :content_type => 'text/xml'
     end
 
