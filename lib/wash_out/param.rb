@@ -3,6 +3,7 @@ module WashOut
     attr_accessor :raw_name
     attr_accessor :name
     attr_accessor :map
+    attr_accessor :attributes
     attr_accessor :type
     attr_accessor :multiplied
     attr_accessor :value
@@ -10,12 +11,13 @@ module WashOut
 
     # Defines a WSDL parameter with name +name+ and type specifier +type+.
     # The type specifier format is described in #parse_def.
-    def initialize(soap_config, name, type, multiplied = false)
+    def initialize(soap_config, name, type, multiplied = false, attributes = {})
       type ||= {}
       @soap_config = soap_config
       @name       = name.to_s
       @raw_name   = name.to_s
       @map        = {}
+      @attributes = attributes
       @multiplied = multiplied
 
       if soap_config.camelize_wsdl.to_s == 'lower'

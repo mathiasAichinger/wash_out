@@ -3,16 +3,67 @@ module WashOutHelper
   def wsdl_data_options(param)
     case controller.soap_config.wsdl_style
     when 'rpc'
-      { :"xsi:type" => param.namespaced_type }
+     # { :"xsi:type" => param.namespaced_type }
+      { }
     when 'document'
       { }
     end
   end
 
+  def array_data_options(param, param_options)
+    p = param.map[0]
+    param_options = param_options.merge({ "soap-enc:arrayType" => "#{p.namespaced_type}[#{p.value.count}]" })
+  end
+
+  def id_data_options(param, param_options)
+    p = param.map[0]
+    param_options = param_options.merge({ "soap:mustUnderstand" => "1" })
+  end
+
   def wsdl_data(xml, params)
+
     params.each do |param|
       tag_name = param.name
       param_options = wsdl_data_options(param)
+
+      if !param.struct?
+        if !param.multiplied
+          xml.tag! tag_name, param.value, param_options
+
+        else
+          param.value = [] unless param.value.is_a?(Array)
+          param.value.each do |v|
+            xml.tag! tag_name, v, param_options
+          end
+        end
+      else
+
+
+        if !param.multiplied
+          param_options = array_data_options(param, param_options)
+          xml.tag! tag_name,  param_options do
+            wsdl_data(xml, param.map)
+          end
+        else
+
+          param.map.each do |p|
+            xml.tag! tag_name, param_options do
+              wsdl_data(xml, p.map)
+            end
+          end
+        end
+      end
+    end
+  end
+
+  def wsdl_header_data(xml, params)
+    params.each do |param|
+      tag_name = param.name
+      param_options = wsdl_data_options(param)
+
+      if tag_name == "ID"
+        param_options = id_data_options(param, param_options)
+      end
 
       if !param.struct?
         if !param.multiplied

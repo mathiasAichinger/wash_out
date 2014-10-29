@@ -10,8 +10,17 @@ module WashOut
       @param_map = value
     end
 
+    def self.map_attributes(value)
+      raise RuntimeError, "Wrong definition: #{value.inspect}" unless value.is_a?(Hash)
+      @attribute_map = value;
+    end
+
     def self.wash_out_param_map
       @param_map
+    end
+
+    def self.wash_out_attribute_map
+      @attribute_map
     end
 
     def self.wash_out_param_name(soap_config = nil)

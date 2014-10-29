@@ -16,13 +16,15 @@ module WashOut
       return env['wash_out.soap_action'] if env['wash_out.soap_action']
 
       soap_action = controller.soap_config.soap_action_routing ? env['HTTP_SOAPACTION'].to_s.gsub(/^"(.*)"$/, '\1')
-                                                               : ''
+      : ''
 
       if soap_action.blank?
-        soap_action = nori(controller.soap_config.snakecase_input).parse(soap_body env)
-            .values_at(:envelope, :Envelope).compact.first
-            .values_at(:body, :Body).compact.first
-            .keys.first.to_s
+        if body = nori(controller.soap_config.snakecase_input).parse(soap_body env)
+          soap_action = body
+          .values_at(:envelope, :Envelope).compact.first
+          .values_at(:body, :Body).compact.first
+          .keys.first.to_s
+        end
       end
 
       # RUBY18 1.8 does not have force_encoding.
@@ -38,13 +40,13 @@ module WashOut
 
     def nori(snakecase=false)
       Nori.new(
-        :parser => controller.soap_config.parser,
-        :strip_namespaces => true,
-        :advanced_typecasting => true,
-        :convert_tags_to => (
+          :parser => controller.soap_config.parser,
+          :strip_namespaces => true,
+          :advanced_typecasting => true,
+          :convert_tags_to => (
           snakecase ? lambda { |tag| tag.snakecase.to_sym }
-                    : lambda { |tag| tag.to_sym }
-        )
+          : lambda { |tag| tag.to_sym }
+          )
       )
     end
 
@@ -53,17 +55,17 @@ module WashOut
       env['rack.input'].rewind if env['rack.input'].respond_to?(:rewind)
 
       env['rack.input'].respond_to?(:string) ? env['rack.input'].string
-                                             : env['rack.input'].read
+      : env['rack.input'].read
     end
 
     def parse_soap_parameters(env)
       return env['wash_out.soap_data'] if env['wash_out.soap_data']
 
       env['wash_out.soap_data'] = nori(controller.soap_config.snakecase_input).parse(soap_body env)
-      references = WashOut::Dispatcher.deep_select(env['wash_out.soap_data']){|k,v| v.is_a?(Hash) && v.has_key?(:@id)}
+      references = WashOut::Dispatcher.deep_select(env['wash_out.soap_data']) { |k, v| v.is_a?(Hash) && v.has_key?(:@id) }
 
       unless references.blank?
-        replaces = {}; references.each{|r| replaces['#'+r[:@id]] = r}
+        replaces = {}; references.each { |r| replaces['#'+r[:@id]] = r }
         env['wash_out.soap_data'] = WashOut::Dispatcher.deep_replace_href(env['wash_out.soap_data'], replaces)
       end
 
@@ -73,7 +75,7 @@ module WashOut
     def call(env)
       @controller = @controller_name.constantize
 
-      soap_action     = parse_soap_action(env)
+      soap_action = parse_soap_action(env)
       soap_parameters = parse_soap_parameters(env)
 
       action_spec = controller.soap_actions[soap_action]
