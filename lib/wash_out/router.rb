@@ -62,6 +62,7 @@ module WashOut
       return env['wash_out.soap_data'] if env['wash_out.soap_data']
 
       env['wash_out.soap_data'] = nori(controller.soap_config.snakecase_input).parse(soap_body env)
+
       references = WashOut::Dispatcher.deep_select(env['wash_out.soap_data']) { |k, v| v.is_a?(Hash) && v.has_key?(:@id) }
 
       unless references.blank?

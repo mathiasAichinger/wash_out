@@ -23,14 +23,22 @@ module WashOut
       if soap_config.camelize_wsdl.to_s == 'lower'
         @name = @name.camelize(:lower)
       elsif soap_config.camelize_wsdl
-        @name = @name.camelize
+        if @name != 'string'
+          @name = @name.camelize
+        end
       end
 
       if type.is_a?(Symbol)
         @type = type.to_s
       elsif type.is_a?(Class)
         @type         = 'struct'
-        @map          = self.class.parse_def(soap_config, type.wash_out_param_map)
+        if type == WashOut::AttributedString
+          @type = type.to_s
+        else
+          @map          = self.class.parse_def(soap_config, type.wash_out_param_map)
+        end
+
+
         @source_class = type
       else
         @type = 'struct'
@@ -61,7 +69,16 @@ module WashOut
             param.load(dat, elem)
           end
         end
+      elsif type == "WashOut::AttributedString"
+        unless data.nil?
+
+
+          attributedString = WashOut::AttributedString.new(data.to_s)
+          attributedString.attributes = data.attributes if data.is_a?(Nori::StringWithAttributes)
+          return attributedString
+        end
       else
+
         operation = case type
           when 'string';       :to_s
           when 'integer';      :to_i
@@ -85,6 +102,7 @@ module WashOut
           else
             operation.call(data)
           end
+
         rescue
           raise WashOut::Dispatcher::SOAPError, "Invalid SOAP parameter '#{key}' format"
         end
@@ -106,6 +124,7 @@ module WashOut
     end
 
     def xsd_type
+      return 'test' if type.to_s == "WashOut::AttributedString"
       return 'int' if type.to_s == 'integer'
       return 'dateTime' if type.to_s == 'datetime'
       return type
@@ -141,6 +160,10 @@ module WashOut
       end
 
       if [Array, Symbol].include?(definition.class)
+        definition = { :value => definition }
+      end
+
+      if definition == WashOut::AttributedString
         definition = { :value => definition }
       end
 
